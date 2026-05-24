@@ -6,8 +6,6 @@ A [SillyTavern](https://docs.sillytavern.app/) extension for learning English wh
 
 RP English Coach uses your selected [connection profile](https://docs.sillytavern.app/usage/core-concepts/connection-profiles/) to generate feedback after character responses. The roleplay message stays first, and the coaching panel appears below it so you can read the scene before studying corrections.
 
-![popup](images/overview.png)
-
 ---
 
 ## What it does
@@ -47,13 +45,9 @@ Default feedback contains:
 
 You can also pick a different schema preset for the active chat from the extensions menu.
 
-![modify_for_this_chat](images/modify_for_this_chat.png)
-
 ---
 
 ## Settings
-
-![settings](images/settings.gif)
 
 Main settings:
 
