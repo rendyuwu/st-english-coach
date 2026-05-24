@@ -72,7 +72,7 @@ Main settings:
 Install via the SillyTavern extension installer:
 
 ```txt
-https://github.com/bmen25124/SillyTavern-WTracker
+https://github.com/rendyuwu/st-english-coach
 ```
 
 If you rename this fork/repo, use your new repository URL instead.
@@ -96,3 +96,13 @@ Yes. Edit the prompt, schema, or HTML template in settings.
 > Can I still use it manually?
 
 Yes. Click the message toolbar language icon to generate or regenerate feedback for a message.
+
+---
+
+## Fork notice
+
+This repository is a fork of [SillyTavern-WTracker](https://github.com/bmen25124/SillyTavern-WTracker).
+
+The original extension provides the core SillyTavern integration: connection profile usage, schema-based generation, prompt modes, message toolbar controls, per-message storage, editable templates, and rendering flow.
+
+This fork repurposes that foundation for English learning during roleplay. Main changes are the default schema, default prompt/template, naming, feedback placement, and small UI/code adjustments needed for the RP English Coach workflow.

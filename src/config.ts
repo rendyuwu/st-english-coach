@@ -28,7 +28,7 @@ export interface ExtensionSettings {
   promptXml: string;
 }
 
-export const extensionName = 'SillyTavern-WTracker';
+export const extensionName = 'st-english-coach';
 
 export const DEFAULT_PROMPT = `You are an RP English Coach. Review the user's previous roleplay writing in the context of the character's latest response. Give selective, practical feedback for English learning without interrupting the roleplay.
 

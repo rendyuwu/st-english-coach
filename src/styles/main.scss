@@ -1,5 +1,5 @@
-.wtracker-settings {
-    .wtracker-container {
+.st-english-coach-settings {
+    .st-english-coach-container {
         display: flex;
         flex-direction: column;
         gap: 12px;
@@ -20,12 +20,12 @@
     }
 }
 
-.mes_wtracker_button.spinning,
-.wtracker-regenerate-button.spinning {
+.mes_st_english_coach_button.spinning,
+.st-english-coach-regenerate-button.spinning {
     animation: spin 2s linear infinite;
 }
 
-.mes_wtracker {
+.mes_st_english_coach {
     position: relative;
     margin-top: 0.75em;
     padding: 0.75em;
@@ -34,7 +34,7 @@
     background: color-mix(in srgb, var(--SmartThemeBlurTintColor, var(--black30a)) 65%, transparent);
     font-size: smaller;
 
-    .wtracker-controls {
+    .st-english-coach-controls {
         position: absolute;
         top: 8px;
         right: 8px;
@@ -42,9 +42,9 @@
         gap: 12px;
         z-index: 1;
 
-        .wtracker-regenerate-button,
-        .wtracker-edit-button,
-        .wtracker-delete-button {
+        .st-english-coach-regenerate-button,
+        .st-english-coach-edit-button,
+        .st-english-coach-delete-button {
             cursor: pointer;
             color: var(--text_color);
             opacity: 0.35;

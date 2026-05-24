@@ -136,14 +136,14 @@ export const RPEnglishCoachSettings: FC = () => {
   };
 
   return (
-    <div className="wtracker-settings">
+    <div className="st-english-coach-settings">
       <div className="inline-drawer">
         <div className="inline-drawer-toggle inline-drawer-header">
           <b>RP English Coach</b>
           <div className="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
         </div>
         <div className="inline-drawer-content">
-          <div className="wtracker-container">
+          <div className="st-english-coach-container">
             <div className="setting-row">
               <label>Connection Profile</label>
               <STConnectionProfileSelect

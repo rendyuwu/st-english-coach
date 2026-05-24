@@ -1,5 +1,5 @@
 {
-    "name": "sillytavern-rp-english-coach",
+    "name": "st-english-coach",
     "version": "0.2.0",
     "description": "A SillyTavern extension for English coaching during roleplay.",
     "type": "module",

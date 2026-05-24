@@ -1,26 +1,26 @@
-.wtracker-settings .wtracker-container {
+.st-english-coach-settings .st-english-coach-container {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
-.wtracker-settings .setting-row {
+.st-english-coach-settings .setting-row {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
-.wtracker-settings .setting-row:last-child {
+.st-english-coach-settings .setting-row:last-child {
   margin-top: 10px;
 }
-.wtracker-settings .setting-row button {
+.st-english-coach-settings .setting-row button {
   align-self: flex-start;
 }
 
-.mes_wtracker_button.spinning,
-.wtracker-regenerate-button.spinning {
+.mes_st_english_coach_button.spinning,
+.st-english-coach-regenerate-button.spinning {
   animation: spin 2s linear infinite;
 }
 
-.mes_wtracker {
+.mes_st_english_coach {
   position: relative;
   margin-top: 0.75em;
   padding: 0.75em;
@@ -29,7 +29,7 @@
   background: color-mix(in srgb, var(--SmartThemeBlurTintColor, var(--black30a)) 65%, transparent);
   font-size: smaller;
 }
-.mes_wtracker .wtracker-controls {
+.mes_st_english_coach .st-english-coach-controls {
   position: absolute;
   top: 8px;
   right: 8px;
@@ -37,36 +37,36 @@
   gap: 12px;
   z-index: 1;
 }
-.mes_wtracker .wtracker-controls .wtracker-regenerate-button,
-.mes_wtracker .wtracker-controls .wtracker-edit-button,
-.mes_wtracker .wtracker-controls .wtracker-delete-button {
+.mes_st_english_coach .st-english-coach-controls .st-english-coach-regenerate-button,
+.mes_st_english_coach .st-english-coach-controls .st-english-coach-edit-button,
+.mes_st_english_coach .st-english-coach-controls .st-english-coach-delete-button {
   cursor: pointer;
   color: var(--text_color);
   opacity: 0.35;
   transition: opacity 0.2s ease-in-out;
 }
-.mes_wtracker .wtracker-controls .wtracker-regenerate-button:hover,
-.mes_wtracker .wtracker-controls .wtracker-edit-button:hover,
-.mes_wtracker .wtracker-controls .wtracker-delete-button:hover {
+.mes_st_english_coach .st-english-coach-controls .st-english-coach-regenerate-button:hover,
+.mes_st_english_coach .st-english-coach-controls .st-english-coach-edit-button:hover,
+.mes_st_english_coach .st-english-coach-controls .st-english-coach-delete-button:hover {
   opacity: 1;
 }
-.mes_wtracker .rp_english_coach_template {
+.mes_st_english_coach .rp_english_coach_template {
   padding-right: 72px;
 }
-.mes_wtracker .rp_english_coach_template details summary {
+.mes_st_english_coach .rp_english_coach_template details summary {
   cursor: pointer;
   font-weight: bold;
 }
-.mes_wtracker .rp_english_coach_template .rp_english_coach_summary {
+.mes_st_english_coach .rp_english_coach_template .rp_english_coach_summary {
   margin: 0.6em 0;
 }
-.mes_wtracker .rp_english_coach_template .rp_english_coach_section {
+.mes_st_english_coach .rp_english_coach_template .rp_english_coach_section {
   display: flex;
   flex-direction: column;
   gap: 0.5em;
   margin-top: 0.75em;
 }
-.mes_wtracker .rp_english_coach_template .rp_english_coach_card {
+.mes_st_english_coach .rp_english_coach_template .rp_english_coach_card {
   padding-left: 0.75em;
   border-left: 2px solid color-mix(in srgb, var(--text_color) 35%, transparent);
   display: flex;

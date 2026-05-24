@@ -38,7 +38,7 @@ if (!Handlebars.helpers['join']) {
 function renderCoachFeedback(messageId: number) {
   const message = globalContext.chat[messageId];
   const messageBlock = document.querySelector(`.mes[mesid="${messageId}"]`);
-  messageBlock?.querySelector('.mes_wtracker')?.remove();
+  messageBlock?.querySelector('.mes_st_english_coach')?.remove();
 
   if (!message?.extra?.[EXTENSION_KEY]) return;
 
@@ -51,16 +51,16 @@ function renderCoachFeedback(messageId: number) {
   const template = Handlebars.compile(feedbackHtmlSchema, { noEscape: true, strict: true });
   const renderedHtml = template({ data: feedbackData });
   const container = document.createElement('div');
-  container.className = 'mes_wtracker';
+  container.className = 'mes_st_english_coach';
   container.innerHTML = renderedHtml;
 
   // Add controls
   const controls = document.createElement('div');
-  controls.className = 'wtracker-controls';
+  controls.className = 'st-english-coach-controls';
   controls.innerHTML = `
-    <div class="wtracker-regenerate-button fa-solid fa-arrows-rotate" title="Regenerate Feedback"></div>
-    <div class="wtracker-edit-button fa-solid fa-code" title="Edit Feedback JSON"></div>
-    <div class="wtracker-delete-button fa-solid fa-trash-can" title="Delete Feedback"></div>
+    <div class="st-english-coach-regenerate-button fa-solid fa-arrows-rotate" title="Regenerate Feedback"></div>
+    <div class="st-english-coach-edit-button fa-solid fa-code" title="Edit Feedback JSON"></div>
+    <div class="st-english-coach-delete-button fa-solid fa-trash-can" title="Delete Feedback"></div>
   `;
   container.prepend(controls);
 
@@ -137,8 +137,8 @@ async function editCoachFeedback(messageId: number) {
 
   const popupContent = `
         <div style="display: flex; flex-direction: column; gap: 8px;">
-            <label for="wtracker-edit-textarea">Edit Feedback JSON:</label>
-            <textarea id="wtracker-edit-textarea" class="text_pole" rows="15" style="width: 100%; resize: vertical;"></textarea>
+            <label for="st-english-coach-edit-textarea">Edit Feedback JSON:</label>
+            <textarea id="st-english-coach-edit-textarea" class="text_pole" rows="15" style="width: 100%; resize: vertical;"></textarea>
         </div>
     `;
 
@@ -146,7 +146,7 @@ async function editCoachFeedback(messageId: number) {
     okButton: 'Save',
     onClose: async (popup) => {
       if (popup.result === POPUP_RESULT.AFFIRMATIVE) {
-        const textarea = popup.content.querySelector('#wtracker-edit-textarea') as HTMLTextAreaElement;
+        const textarea = popup.content.querySelector('#st-english-coach-edit-textarea') as HTMLTextAreaElement;
         if (textarea) {
           try {
             const newData = JSON.parse(textarea.value);
@@ -155,14 +155,14 @@ async function editCoachFeedback(messageId: number) {
             await globalContext.saveChat();
             let detailsState: boolean[] = [];
             const messageBlock = document.querySelector(`.mes[mesid="${messageId}"]`);
-            const existingFeedback = messageBlock?.querySelector('.mes_wtracker');
+            const existingFeedback = messageBlock?.querySelector('.mes_st_english_coach');
             if (existingFeedback) {
               const detailsElements = existingFeedback.querySelectorAll('details');
               detailsState = Array.from(detailsElements).map((detail) => detail.open);
             }
             renderCoachFeedback(messageId);
             if (detailsState.length > 0) {
-              const newFeedback = messageBlock?.querySelector('.mes_wtracker');
+              const newFeedback = messageBlock?.querySelector('.mes_st_english_coach');
               if (newFeedback) {
                 const newDetailsElements = newFeedback.querySelectorAll('details');
                 newDetailsElements.forEach((detail, index) => {
@@ -182,7 +182,7 @@ async function editCoachFeedback(messageId: number) {
       }
     },
   });
-  const textarea = document.querySelector('#wtracker-edit-textarea') as HTMLTextAreaElement;
+  const textarea = document.querySelector('#st-english-coach-edit-textarea') as HTMLTextAreaElement;
   if (textarea) {
     textarea.value = JSON.stringify(currentData, null, 2);
   }
@@ -218,11 +218,11 @@ async function generateCoachFeedback(id: number) {
   characterId = characterId !== -1 ? characterId : undefined;
 
   const messageBlock = document.querySelector(`.mes[mesid="${id}"]`);
-  const mainButton = messageBlock?.querySelector('.mes_wtracker_button');
-  const regenerateButton = messageBlock?.querySelector('.wtracker-regenerate-button');
+  const mainButton = messageBlock?.querySelector('.mes_st_english_coach_button');
+  const regenerateButton = messageBlock?.querySelector('.st-english-coach-regenerate-button');
 
   let detailsState: boolean[] = [];
-  const existingFeedback = messageBlock?.querySelector('.mes_wtracker');
+  const existingFeedback = messageBlock?.querySelector('.mes_st_english_coach');
   if (existingFeedback) {
     const detailsElements = existingFeedback.querySelectorAll('details');
     detailsState = Array.from(detailsElements).map((detail) => detail.open);
@@ -315,7 +315,7 @@ async function generateCoachFeedback(id: number) {
       renderCoachFeedback(id);
 
       if (detailsState.length > 0) {
-        const newFeedback = messageBlock?.querySelector('.mes_wtracker');
+        const newFeedback = messageBlock?.querySelector('.mes_st_english_coach');
         if (newFeedback) {
           const newDetailsElements = newFeedback.querySelectorAll('details');
           newDetailsElements.forEach((detail, index) => {
@@ -350,7 +350,7 @@ async function generateCoachFeedback(id: number) {
 async function initializeGlobalUI() {
   const coachIcon = document.createElement('div');
   coachIcon.title = 'Generate English Feedback';
-  coachIcon.className = 'mes_button mes_wtracker_button fa-solid fa-language interactable';
+  coachIcon.className = 'mes_button mes_st_english_coach_button fa-solid fa-language interactable';
   coachIcon.tabIndex = 0;
   document.querySelector('#message_template .mes_buttons .extraMesButtons')?.prepend(coachIcon);
 
@@ -363,20 +363,20 @@ async function initializeGlobalUI() {
     const messageId = Number(messageEl.getAttribute('mesid'));
     if (isNaN(messageId)) return;
 
-    if (target.classList.contains('mes_wtracker_button')) {
+    if (target.classList.contains('mes_st_english_coach_button')) {
       generateCoachFeedback(messageId);
-    } else if (target.classList.contains('wtracker-edit-button')) {
+    } else if (target.classList.contains('st-english-coach-edit-button')) {
       editCoachFeedback(messageId);
-    } else if (target.classList.contains('wtracker-regenerate-button')) {
+    } else if (target.classList.contains('st-english-coach-regenerate-button')) {
       generateCoachFeedback(messageId);
-    } else if (target.classList.contains('wtracker-delete-button')) {
+    } else if (target.classList.contains('st-english-coach-delete-button')) {
       deleteCoachFeedback(messageId);
     }
   });
 
   const extensionsMenu = document.querySelector('#extensionsMenu');
   const buttonContainer = document.createElement('div');
-  buttonContainer.id = 'wtracker_menu_buttons';
+  buttonContainer.id = 'st_english_coach_menu_buttons';
   buttonContainer.className = 'extension_container';
   extensionsMenu?.appendChild(buttonContainer);
   const buttonHtml = await globalContext.renderExtensionTemplateAsync(
@@ -384,7 +384,7 @@ async function initializeGlobalUI() {
     'templates/buttons',
   );
   buttonContainer.insertAdjacentHTML('beforeend', buttonHtml);
-  extensionsMenu?.querySelector('#wtracker_modify_schema_preset')?.addEventListener('click', async () => {
+  extensionsMenu?.querySelector('#st_english_coach_modify_schema_preset')?.addEventListener('click', async () => {
     await modifyChatMetadata();
   });
 
@@ -419,7 +419,7 @@ async function initializeGlobalUI() {
   });
 
   // Register the global generation interceptor
-  (globalThis as any).wtrackerGenerateInterceptor = (chat: ChatMessage[]) => {
+  (globalThis as any).stEnglishCoachGenerateInterceptor = (chat: ChatMessage[]) => {
     const newChat = includeCoachFeedbackMessages(chat, settingsManager.getSettings());
     chat.length = 0;
     chat.push(...newChat);
@@ -459,7 +459,7 @@ async function modifyChatMetadata() {
     okButton: 'Save',
     onClose(popup) {
       if (popup.result === POPUP_RESULT.AFFIRMATIVE) {
-        const selectElement = document.getElementById('wtracker-chat-schema-select') as HTMLSelectElement;
+        const selectElement = document.getElementById('st-english-coach-chat-schema-select') as HTMLSelectElement;
         if (selectElement) {
           const newPresetKey = selectElement.value;
           if (newPresetKey !== currentPresetKey) {
@@ -482,10 +482,10 @@ function renderReactSettings() {
     return;
   }
 
-  let reactRootEl = document.getElementById('wtracker-react-settings-root');
+  let reactRootEl = document.getElementById('st-english-coach-react-settings-root');
   if (!reactRootEl) {
     reactRootEl = document.createElement('div');
-    reactRootEl.id = 'wtracker-react-settings-root';
+    reactRootEl.id = 'st-english-coach-react-settings-root';
     settingsContainer.appendChild(reactRootEl);
   }
 
