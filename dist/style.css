@@ -22,6 +22,12 @@
 
 .mes_wtracker {
   position: relative;
+  margin-top: 0.75em;
+  padding: 0.75em;
+  border: 1px solid color-mix(in srgb, var(--SmartThemeBorderColor, var(--text_color)) 45%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--SmartThemeBlurTintColor, var(--black30a)) 65%, transparent);
+  font-size: smaller;
 }
 .mes_wtracker .wtracker-controls {
   position: absolute;
@@ -36,7 +42,7 @@
 .mes_wtracker .wtracker-controls .wtracker-delete-button {
   cursor: pointer;
   color: var(--text_color);
-  opacity: 0.3;
+  opacity: 0.35;
   transition: opacity 0.2s ease-in-out;
 }
 .mes_wtracker .wtracker-controls .wtracker-regenerate-button:hover,
@@ -44,26 +50,26 @@
 .mes_wtracker .wtracker-controls .wtracker-delete-button:hover {
   opacity: 1;
 }
-.mes_wtracker .wtracker_default_mes_template {
-  font-size: smaller;
+.mes_wtracker .rp_english_coach_template {
+  padding-right: 72px;
 }
-.mes_wtracker .wtracker_default_mes_template tr td {
-  vertical-align: top;
-}
-.mes_wtracker .wtracker_default_mes_template tr td:first-child {
-  text-align: right;
-  font-weight: bold;
-  width: 60px;
-}
-.mes_wtracker .wtracker_default_mes_template details summary {
+.mes_wtracker .rp_english_coach_template details summary {
+  cursor: pointer;
   font-weight: bold;
 }
-.mes_wtracker .wtracker_default_mes_template details summary span {
-  left: -3.25px;
-  position: relative;
-  display: inline-block;
+.mes_wtracker .rp_english_coach_template .rp_english_coach_summary {
+  margin: 0.6em 0;
 }
-.mes_wtracker .wtracker_default_mes_template details table,
-.mes_wtracker .wtracker_default_mes_template details .mes_wtracker_characters {
-  padding-left: 20px;
+.mes_wtracker .rp_english_coach_template .rp_english_coach_section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  margin-top: 0.75em;
+}
+.mes_wtracker .rp_english_coach_template .rp_english_coach_card {
+  padding-left: 0.75em;
+  border-left: 2px solid color-mix(in srgb, var(--text_color) 35%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
 }

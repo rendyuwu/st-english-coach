@@ -22,59 +22,67 @@
 
 .mes_wtracker_button.spinning,
 .wtracker-regenerate-button.spinning {
-  animation: spin 2s linear infinite;
+    animation: spin 2s linear infinite;
 }
 
 .mes_wtracker {
-	position: relative;
+    position: relative;
+    margin-top: 0.75em;
+    padding: 0.75em;
+    border: 1px solid color-mix(in srgb, var(--SmartThemeBorderColor, var(--text_color)) 45%, transparent);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--SmartThemeBlurTintColor, var(--black30a)) 65%, transparent);
+    font-size: smaller;
 
-	.wtracker-controls {
-		position: absolute;
-		top: 8px;
-		right: 8px;
-		display: flex;
-		gap: 12px;
-		z-index: 1;
+    .wtracker-controls {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        display: flex;
+        gap: 12px;
+        z-index: 1;
 
-		.wtracker-regenerate-button,
-		.wtracker-edit-button,
-		.wtracker-delete-button {
-			cursor: pointer;
-			color: var(--text_color);
-			opacity: 0.3;
-			transition: opacity 0.2s ease-in-out;
+        .wtracker-regenerate-button,
+        .wtracker-edit-button,
+        .wtracker-delete-button {
+            cursor: pointer;
+            color: var(--text_color);
+            opacity: 0.35;
+            transition: opacity 0.2s ease-in-out;
 
-			&:hover {
-				opacity: 1;
-			}
-		}
-	}
+            &:hover {
+                opacity: 1;
+            }
+        }
+    }
 
-	.wtracker_default_mes_template {
-		font-size: smaller;
-		tr {
-			td {
-				vertical-align: top;
-				&:first-child {
-					text-align: right;
-					font-weight: bold;
-					width: 60px;
-				}
-			}
-		}
-		details {
-			summary {
-				font-weight: bold;
-				span {
-					left: -3.25px;
-					position: relative;
-					display: inline-block;
-				}
-			}
-			table,
-			.mes_wtracker_characters {
-				padding-left: 20px;
-			}
-		}
-	}
+    .rp_english_coach_template {
+        padding-right: 72px;
+
+        details {
+            summary {
+                cursor: pointer;
+                font-weight: bold;
+            }
+        }
+
+        .rp_english_coach_summary {
+            margin: 0.6em 0;
+        }
+
+        .rp_english_coach_section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5em;
+            margin-top: 0.75em;
+        }
+
+        .rp_english_coach_card {
+            padding-left: 0.75em;
+            border-left: 2px solid color-mix(in srgb, var(--text_color) 35%, transparent);
+            display: flex;
+            flex-direction: column;
+            gap: 0.25em;
+        }
+    }
 }

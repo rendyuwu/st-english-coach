@@ -1,7 +1,7 @@
 {
-    "name": "sillytavern-wtracker",
-    "version": "1.0.0",
-    "description": "A web application using pure JS and SCSS.",
+    "name": "sillytavern-rp-english-coach",
+    "version": "0.2.0",
+    "description": "A SillyTavern extension for English coaching during roleplay.",
     "type": "module",
     "main": "src/scripts/main.js",
     "scripts": {

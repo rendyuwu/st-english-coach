@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { settingsManager, WTrackerSettings } from './components/Settings.js';
+import { settingsManager, RPEnglishCoachSettings } from './components/Settings.js';
 
 import { buildPrompt, Message, Generator } from 'sillytavern-utils-lib';
 import { ChatMessage, EventNames, ExtractedData } from 'sillytavern-utils-lib/types';
@@ -35,21 +35,21 @@ if (!Handlebars.helpers['join']) {
 
 // --- Core Logic Functions (ported from original index.ts) ---
 
-function renderTracker(messageId: number) {
+function renderCoachFeedback(messageId: number) {
   const message = globalContext.chat[messageId];
   const messageBlock = document.querySelector(`.mes[mesid="${messageId}"]`);
   messageBlock?.querySelector('.mes_wtracker')?.remove();
 
   if (!message?.extra?.[EXTENSION_KEY]) return;
 
-  const trackerData = message.extra[EXTENSION_KEY][CHAT_MESSAGE_SCHEMA_VALUE_KEY];
-  const trackerHtmlSchema = message.extra[EXTENSION_KEY][CHAT_MESSAGE_SCHEMA_HTML_KEY];
-  if (!trackerData || !trackerHtmlSchema) return;
+  const feedbackData = message.extra[EXTENSION_KEY][CHAT_MESSAGE_SCHEMA_VALUE_KEY];
+  const feedbackHtmlSchema = message.extra[EXTENSION_KEY][CHAT_MESSAGE_SCHEMA_HTML_KEY];
+  if (!feedbackData || !feedbackHtmlSchema) return;
 
   if (!messageBlock) return;
 
-  const template = Handlebars.compile(trackerHtmlSchema, { noEscape: true, strict: true });
-  const renderedHtml = template({ data: trackerData });
+  const template = Handlebars.compile(feedbackHtmlSchema, { noEscape: true, strict: true });
+  const renderedHtml = template({ data: feedbackData });
   const container = document.createElement('div');
   container.className = 'mes_wtracker';
   container.innerHTML = renderedHtml;
@@ -58,19 +58,27 @@ function renderTracker(messageId: number) {
   const controls = document.createElement('div');
   controls.className = 'wtracker-controls';
   controls.innerHTML = `
-    <div class="wtracker-regenerate-button fa-solid fa-arrows-rotate" title="Regenerate Tracker"></div>
-    <div class="wtracker-edit-button fa-solid fa-code" title="Edit Tracker Data"></div>
-    <div class="wtracker-delete-button fa-solid fa-trash-can" title="Delete Tracker"></div>
+    <div class="wtracker-regenerate-button fa-solid fa-arrows-rotate" title="Regenerate Feedback"></div>
+    <div class="wtracker-edit-button fa-solid fa-code" title="Edit Feedback JSON"></div>
+    <div class="wtracker-delete-button fa-solid fa-trash-can" title="Delete Feedback"></div>
   `;
   container.prepend(controls);
 
-  messageBlock.querySelector('.mes_text')?.before(container);
+  const messageText = messageBlock.querySelector('.mes_text');
+  if (messageText) {
+    messageText.after(container);
+  } else {
+    messageBlock.append(container);
+  }
 }
 
-function includeWTrackerMessages<T extends Message | ChatMessage>(messages: T[], settings: ExtensionSettings): T[] {
+function includeCoachFeedbackMessages<T extends Message | ChatMessage>(
+  messages: T[],
+  settings: ExtensionSettings,
+): T[] {
   let copyMessages = structuredClone(messages);
-  if (settings.includeLastXWTrackerMessages > 0) {
-    for (let i = 0; i < settings.includeLastXWTrackerMessages; i++) {
+  if (settings.includeLastXCoachFeedbackMessages > 0) {
+    for (let i = 0; i < settings.includeLastXCoachFeedbackMessages; i++) {
       let foundMessage: T | null = null;
       let foundIndex = -1;
       for (let j = copyMessages.length - 2; j >= 0; j--) {
@@ -78,9 +86,9 @@ function includeWTrackerMessages<T extends Message | ChatMessage>(messages: T[],
         const message = copyMessages[j];
         const extra = 'source' in message ? (message as Message).source?.extra : (message as ChatMessage).extra;
         // @ts-ignore
-        if (!message.wTrackerFound && extra?.[EXTENSION_KEY]?.[CHAT_MESSAGE_SCHEMA_VALUE_KEY]) {
+        if (!message.coachFeedbackFound && extra?.[EXTENSION_KEY]?.[CHAT_MESSAGE_SCHEMA_VALUE_KEY]) {
           // @ts-ignore
-          message.wTrackerFound = true;
+          message.coachFeedbackFound = true;
           foundMessage = message;
           foundIndex = j;
           break;
@@ -89,7 +97,7 @@ function includeWTrackerMessages<T extends Message | ChatMessage>(messages: T[],
       if (foundMessage) {
         const extra =
           'source' in foundMessage ? (foundMessage as Message).source?.extra : (foundMessage as ChatMessage).extra;
-        const content = `Tracker:\n\`\`\`json\n${JSON.stringify(extra?.[EXTENSION_KEY]?.[CHAT_MESSAGE_SCHEMA_VALUE_KEY] || '{}', null, 2)}\n\`\`\``;
+        const content = `Coach feedback:\n\`\`\`json\n${JSON.stringify(extra?.[EXTENSION_KEY]?.[CHAT_MESSAGE_SCHEMA_VALUE_KEY] || '{}', null, 2)}\n\`\`\``;
         copyMessages.splice(foundIndex + 1, 0, {
           content,
           role: 'user',
@@ -104,24 +112,24 @@ function includeWTrackerMessages<T extends Message | ChatMessage>(messages: T[],
   return copyMessages;
 }
 
-async function deleteTracker(messageId: number) {
+async function deleteCoachFeedback(messageId: number) {
   const message = globalContext.chat[messageId];
   if (!message?.extra?.[EXTENSION_KEY]) return;
 
   const confirm = await globalContext.Popup.show.confirm(
-    'Delete Tracker',
-    'Are you sure you want to delete the tracker data for this message? This cannot be undone.',
+    'Delete Feedback',
+    'Are you sure you want to delete the feedback data for this message? This cannot be undone.',
   );
 
   if (confirm) {
     delete message.extra[EXTENSION_KEY];
     await globalContext.saveChat();
-    renderTracker(messageId); // This will remove the rendered tracker
-    st_echo('success', 'Tracker data deleted.');
+    renderCoachFeedback(messageId);
+    st_echo('success', 'Feedback deleted.');
   }
 }
 
-async function editTracker(messageId: number) {
+async function editCoachFeedback(messageId: number) {
   const message = globalContext.chat[messageId];
   if (!message?.extra?.[EXTENSION_KEY]?.[CHAT_MESSAGE_SCHEMA_VALUE_KEY]) return;
 
@@ -129,12 +137,12 @@ async function editTracker(messageId: number) {
 
   const popupContent = `
         <div style="display: flex; flex-direction: column; gap: 8px;">
-            <label for="wtracker-edit-textarea">Edit Tracker JSON:</label>
+            <label for="wtracker-edit-textarea">Edit Feedback JSON:</label>
             <textarea id="wtracker-edit-textarea" class="text_pole" rows="15" style="width: 100%; resize: vertical;"></textarea>
         </div>
     `;
 
-  globalContext.callGenericPopup(popupContent, POPUP_TYPE.CONFIRM, 'Edit Tracker', {
+  globalContext.callGenericPopup(popupContent, POPUP_TYPE.CONFIRM, 'Edit Feedback', {
     okButton: 'Save',
     onClose: async (popup) => {
       if (popup.result === POPUP_RESULT.AFFIRMATIVE) {
@@ -147,16 +155,16 @@ async function editTracker(messageId: number) {
             await globalContext.saveChat();
             let detailsState: boolean[] = [];
             const messageBlock = document.querySelector(`.mes[mesid="${messageId}"]`);
-            const existingTracker = messageBlock?.querySelector('.mes_wtracker');
-            if (existingTracker) {
-              const detailsElements = existingTracker.querySelectorAll('details');
+            const existingFeedback = messageBlock?.querySelector('.mes_wtracker');
+            if (existingFeedback) {
+              const detailsElements = existingFeedback.querySelectorAll('details');
               detailsState = Array.from(detailsElements).map((detail) => detail.open);
             }
-            renderTracker(messageId);
+            renderCoachFeedback(messageId);
             if (detailsState.length > 0) {
-              const newTracker = messageBlock?.querySelector('.mes_wtracker');
-              if (newTracker) {
-                const newDetailsElements = newTracker.querySelectorAll('details');
+              const newFeedback = messageBlock?.querySelector('.mes_wtracker');
+              if (newFeedback) {
+                const newDetailsElements = newFeedback.querySelectorAll('details');
                 newDetailsElements.forEach((detail, index) => {
                   // Safety check: only apply if a state for this index exists
                   if (detailsState[index] !== undefined) {
@@ -165,9 +173,9 @@ async function editTracker(messageId: number) {
                 });
               }
             }
-            st_echo('success', 'Tracker data updated.');
+            st_echo('success', 'Feedback updated.');
           } catch (e) {
-            console.error('Error parsing new tracker data:', e);
+            console.error('Error parsing feedback data:', e);
             st_echo('error', 'Invalid JSON. Changes were not saved.');
           }
         }
@@ -180,14 +188,14 @@ async function editTracker(messageId: number) {
   }
 }
 
-async function generateTracker(id: number) {
+async function generateCoachFeedback(id: number) {
   const message = globalContext.chat[id];
   if (!message) return st_echo('error', `Message with ID ${id} not found.`);
 
   if (pendingRequests.has(id)) {
     const requestId = pendingRequests.get(id)!;
     generator.abortRequest(requestId);
-    st_echo('info', 'Tracker generation cancelled.');
+    st_echo('info', 'Feedback generation cancelled.');
     return;
   }
 
@@ -214,9 +222,9 @@ async function generateTracker(id: number) {
   const regenerateButton = messageBlock?.querySelector('.wtracker-regenerate-button');
 
   let detailsState: boolean[] = [];
-  const existingTracker = messageBlock?.querySelector('.mes_wtracker');
-  if (existingTracker) {
-    const detailsElements = existingTracker.querySelectorAll('details');
+  const existingFeedback = messageBlock?.querySelector('.mes_wtracker');
+  if (existingFeedback) {
+    const detailsElements = existingFeedback.querySelectorAll('details');
     detailsState = Array.from(detailsElements).map((detail) => detail.open);
   }
   try {
@@ -235,7 +243,7 @@ async function generateTracker(id: number) {
       syspromptName: profile?.sysprompt,
       includeNames: !!selected_group,
     });
-    let messages = includeWTrackerMessages(promptResult.result, settings);
+    let messages = includeCoachFeedbackMessages(promptResult.result, settings);
     let response: ExtractedData['content'];
 
     const makeRequest = (requestMessages: Message[], overideParams?: any): Promise<ExtractedData | undefined> => {
@@ -275,7 +283,7 @@ async function generateTracker(id: number) {
     if (settings.promptEngineeringMode === PromptEngineeringMode.NATIVE) {
       messages.push({ content: settings.prompt, role: 'user' });
       const result = await makeRequest(messages, {
-        json_schema: { name: 'SceneTracker', strict: true, value: chatJsonValue },
+        json_schema: { name: 'RPEnglishCoachFeedback', strict: true, value: chatJsonValue },
       });
       // @ts-ignore
       response = result?.content;
@@ -294,7 +302,8 @@ async function generateTracker(id: number) {
       response = parseResponse(rest.content, format, { schema: chatJsonValue });
     }
 
-    if (!response || Object.keys(response as any).length === 0) throw new Error('Empty response from WTracker.');
+    if (!response || Object.keys(response as any).length === 0)
+      throw new Error('Empty response from RP English Coach.');
 
     // Tentatively update message and try to render
     message.extra = message.extra || {};
@@ -303,12 +312,12 @@ async function generateTracker(id: number) {
     message.extra[EXTENSION_KEY][CHAT_MESSAGE_SCHEMA_HTML_KEY] = chatHtmlValue;
 
     try {
-      renderTracker(id);
+      renderCoachFeedback(id);
 
       if (detailsState.length > 0) {
-        const newTracker = messageBlock?.querySelector('.mes_wtracker');
-        if (newTracker) {
-          const newDetailsElements = newTracker.querySelectorAll('details');
+        const newFeedback = messageBlock?.querySelector('.mes_wtracker');
+        if (newFeedback) {
+          const newDetailsElements = newFeedback.querySelectorAll('details');
           newDetailsElements.forEach((detail, index) => {
             // Safety check: only apply if a state for this index exists
             if (detailsState[index] !== undefined) {
@@ -321,17 +330,14 @@ async function generateTracker(id: number) {
       // If render succeeds, save the chat
       await saveChat();
     } catch (renderError) {
-      // If render fails, remove the tracker data we just added
       delete message.extra[EXTENSION_KEY];
-      // Re-render to clear the failed attempt from the DOM
-      renderTracker(id);
-      // Let the outer catch block show the error to the user
+      renderCoachFeedback(id);
       throw new Error(`Generated data failed to render with the current template. Not saved.`);
     }
   } catch (error: any) {
     if (error.name !== 'AbortError') {
-      console.error('Error generating tracker:', error);
-      st_echo('error', `Tracker generation failed: ${(error as Error).message}`);
+      console.error('Error generating feedback:', error);
+      st_echo('error', `Feedback generation failed: ${(error as Error).message}`);
     }
   } finally {
     mainButton?.classList.remove('spinning');
@@ -342,14 +348,13 @@ async function generateTracker(id: number) {
 // --- UI Initialization (Non-React parts) ---
 
 async function initializeGlobalUI() {
-  // Add WTracker icon to message buttons
-  const wTrackerIcon = document.createElement('div');
-  wTrackerIcon.title = 'WTracker';
-  wTrackerIcon.className = 'mes_button mes_wtracker_button fa-solid fa-truck-moving interactable';
-  wTrackerIcon.tabIndex = 0;
-  document.querySelector('#message_template .mes_buttons .extraMesButtons')?.prepend(wTrackerIcon);
+  const coachIcon = document.createElement('div');
+  coachIcon.title = 'Generate English Feedback';
+  coachIcon.className = 'mes_button mes_wtracker_button fa-solid fa-language interactable';
+  coachIcon.tabIndex = 0;
+  document.querySelector('#message_template .mes_buttons .extraMesButtons')?.prepend(coachIcon);
 
-  // Add global click listener for various tracker-related buttons on messages
+  // Add global click listener for feedback buttons on messages
   document.addEventListener('click', (event) => {
     const target = event.target as HTMLElement;
     const messageEl = target.closest('.mes');
@@ -359,13 +364,13 @@ async function initializeGlobalUI() {
     if (isNaN(messageId)) return;
 
     if (target.classList.contains('mes_wtracker_button')) {
-      generateTracker(messageId);
+      generateCoachFeedback(messageId);
     } else if (target.classList.contains('wtracker-edit-button')) {
-      editTracker(messageId);
+      editCoachFeedback(messageId);
     } else if (target.classList.contains('wtracker-regenerate-button')) {
-      generateTracker(messageId);
+      generateCoachFeedback(messageId);
     } else if (target.classList.contains('wtracker-delete-button')) {
-      deleteTracker(messageId);
+      deleteCoachFeedback(messageId);
     }
   });
 
@@ -387,21 +392,21 @@ async function initializeGlobalUI() {
   const settings = settingsManager.getSettings();
   globalContext.eventSource.on(
     EventNames.CHARACTER_MESSAGE_RENDERED,
-    (messageId: number) => incomingTypes.includes(settings.autoMode) && generateTracker(messageId),
+    (messageId: number) => incomingTypes.includes(settings.autoMode) && generateCoachFeedback(messageId),
   );
   globalContext.eventSource.on(
     EventNames.USER_MESSAGE_RENDERED,
-    (messageId: number) => outgoingTypes.includes(settings.autoMode) && generateTracker(messageId),
+    (messageId: number) => outgoingTypes.includes(settings.autoMode) && generateCoachFeedback(messageId),
   );
   globalContext.eventSource.on(EventNames.CHAT_CHANGED, () => {
     const { saveChat } = globalContext;
     let chatModified = false;
     globalContext.chat.forEach((message, i) => {
       try {
-        renderTracker(i);
+        renderCoachFeedback(i);
       } catch (error) {
-        console.error(`Error rendering WTracker on message ${i}, removing data:`, error);
-        st_echo('error', 'A WTracker template failed to render. Removing tracker from the message.');
+        console.error(`Error rendering RP English Coach feedback on message ${i}, removing data:`, error);
+        st_echo('error', 'An RP English Coach template failed to render. Removing feedback from the message.');
         if (message?.extra?.[EXTENSION_KEY]) {
           delete message.extra[EXTENSION_KEY];
           chatModified = true;
@@ -415,7 +420,7 @@ async function initializeGlobalUI() {
 
   // Register the global generation interceptor
   (globalThis as any).wtrackerGenerateInterceptor = (chat: ChatMessage[]) => {
-    const newChat = includeWTrackerMessages(chat, settingsManager.getSettings());
+    const newChat = includeCoachFeedbackMessages(chat, settingsManager.getSettings());
     chat.length = 0;
     chat.push(...newChat);
   };
@@ -445,7 +450,7 @@ async function modifyChatMetadata() {
 
   // Render the popup content from the template file
   const popupContent = await globalContext.renderExtensionTemplateAsync(
-    'third-party/SillyTavern-WTracker',
+    `third-party/${extensionName}`,
     'templates/modify_schema_popup',
     templateData,
   );
@@ -473,7 +478,7 @@ async function modifyChatMetadata() {
 function renderReactSettings() {
   const settingsContainer = document.getElementById('extensions_settings');
   if (!settingsContainer) {
-    console.error('WTracker: Extension settings container not found.');
+    console.error('RP English Coach: Extension settings container not found.');
     return;
   }
 
@@ -487,7 +492,7 @@ function renderReactSettings() {
   const root = createRoot(reactRootEl);
   root.render(
     <React.StrictMode>
-      <WTrackerSettings />
+      <RPEnglishCoachSettings />
     </React.StrictMode>,
   );
 }
@@ -502,5 +507,5 @@ settingsManager
   .then(main)
   .catch((error) => {
     console.error(error);
-    st_echo('error', 'WTracker data migration failed. Check console for details.');
+    st_echo('error', 'RP English Coach settings failed to load. Check console for details.');
   });

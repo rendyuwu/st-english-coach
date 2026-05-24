@@ -1,12 +1,12 @@
 {
-    "display_name": "WTracker",
+    "display_name": "RP English Coach",
     "loading_order": 300,
     "requires": [],
     "optional": [],
     "js": "dist/index.js",
     "css": "dist/style.css",
     "author": "bmen25124",
-    "version": "0.1.1",
+    "version": "0.2.0",
     "homePage": "https://github.com/bmen25124/SillyTavern-WTracker",
     "generate_interceptor": "wtrackerGenerateInterceptor"
 }

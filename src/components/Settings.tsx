@@ -25,7 +25,7 @@ import { useForceUpdate } from '../hooks/useForceUpdate.js';
 // Initialize the settings manager once, outside the component
 export const settingsManager = new ExtensionSettingsManager<ExtensionSettings>(EXTENSION_KEY, defaultSettings);
 
-export const WTrackerSettings: FC = () => {
+export const RPEnglishCoachSettings: FC = () => {
   const forceUpdate = useForceUpdate();
   const settings = settingsManager.getSettings();
   const [schemaText, setSchemaText] = useState(
@@ -139,7 +139,7 @@ export const WTrackerSettings: FC = () => {
     <div className="wtracker-settings">
       <div className="inline-drawer">
         <div className="inline-drawer-toggle inline-drawer-header">
-          <b>WTracker</b>
+          <b>RP English Coach</b>
           <div className="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
         </div>
         <div className="inline-drawer-content">
@@ -168,8 +168,8 @@ export const WTrackerSettings: FC = () => {
                 }
               >
                 <option value="none">None</option>
-                <option value="responses">Process responses</option>
-                <option value="inputs">Process inputs</option>
+                <option value="responses">Process character responses</option>
+                <option value="inputs">Process user inputs</option>
                 <option value="both">Process both</option>
               </select>
             </div>
@@ -224,7 +224,7 @@ export const WTrackerSettings: FC = () => {
                 <span>Prompt</span>
                 <STButton
                   className="fa-solid fa-undo"
-                  title="Restore main context template to default"
+                  title="Restore coach prompt to default"
                   onClick={() =>
                     updateAndRefresh((s) => {
                       s.prompt = DEFAULT_PROMPT;
@@ -248,7 +248,7 @@ export const WTrackerSettings: FC = () => {
                 <span>Prompt (JSON)</span>
                 <STButton
                   className="fa-solid fa-undo"
-                  title="Restore main context template to default"
+                  title="Restore coach prompt to default"
                   onClick={() =>
                     updateAndRefresh((s) => {
                       s.promptJson = DEFAULT_PROMPT_JSON;
@@ -272,7 +272,7 @@ export const WTrackerSettings: FC = () => {
                 <span>Prompt (XML)</span>
                 <STButton
                   className="fa-solid fa-undo"
-                  title="Restore main context template to default"
+                  title="Restore coach prompt to default"
                   onClick={() =>
                     updateAndRefresh((s) => {
                       s.promptXml = DEFAULT_PROMPT_XML;
@@ -323,17 +323,17 @@ export const WTrackerSettings: FC = () => {
               />
             </div>
             <div className="setting-row">
-              <label>Include Last X WTracker Messages</label>
+              <label>Include Last X Coach Feedback Entries</label>
               <input
                 type="number"
                 className="text_pole"
                 min="0"
                 step="1"
                 title="0 means none."
-                value={settings.includeLastXWTrackerMessages}
+                value={settings.includeLastXCoachFeedbackMessages}
                 onChange={(e) =>
                   updateAndRefresh((s) => {
-                    s.includeLastXWTrackerMessages = parseInt(e.target.value) || 0;
+                    s.includeLastXCoachFeedbackMessages = parseInt(e.target.value) || 0;
                   })
                 }
               />
