@@ -106,6 +106,27 @@ function isBadRequestError(error: any): boolean {
   return false;
 }
 
+function getErrorChain(error: any): string[] {
+  const chain: string[] = [];
+  let current = error;
+  while (current) {
+    chain.push(String(current.message ?? current));
+    current = current.cause;
+  }
+  return chain;
+}
+
+function getMessageDebugInfo(message: Message, index: number) {
+  const name = (message as any).name;
+  return {
+    index,
+    role: message.role,
+    contentLength: message.content?.length ?? 0,
+    hasName: typeof name === 'string' && name.length > 0,
+    nameValidForOpenAI: typeof name !== 'string' || /^[a-zA-Z0-9_-]{1,64}$/.test(name),
+  };
+}
+
 function includeCoachFeedbackMessages<T extends Message | ChatMessage>(
   messages: T[],
   settings: ExtensionSettings,
@@ -280,18 +301,27 @@ async function generateCoachFeedback(id: number) {
     let messages = includeCoachFeedbackMessages(promptResult.result, settings);
     let response: object | string | undefined;
 
-    const makeRequest = (requestMessages: Message[], overideParams?: any): Promise<ExtractedData | undefined> => {
+    const makeRequest = (requestMessages: Message[], overrideParams?: any): Promise<ExtractedData | undefined> => {
       return new Promise((resolve, reject) => {
         const abortController = new AbortController();
+        const overridePayload = { ...overrideParams };
+        console.debug('[RP English Coach] request debug', {
+          mode: settings.promptEngineeringMode,
+          profileApi: profile?.api,
+          profilePreset: profile?.preset,
+          apiMapSelected: apiMap?.selected,
+          maxTokens: settings.maxResponseToken,
+          messageCount: requestMessages.length,
+          messages: requestMessages.map(getMessageDebugInfo),
+          overrideKeys: Object.keys(overridePayload),
+        });
         generator.generateRequest(
           {
             profileId: settings.profileId,
             prompt: requestMessages,
             maxTokens: settings.maxResponseToken,
             custom: { signal: abortController.signal },
-            overridePayload: {
-              ...overideParams,
-            },
+            overridePayload,
           },
           {
             abortController,
@@ -301,6 +331,11 @@ async function generateCoachFeedback(id: number) {
             onFinish: (_requestId, data, error) => {
               pendingRequests.delete(id);
               if (error) {
+                console.error('[RP English Coach] request error debug', {
+                  mode: settings.promptEngineeringMode,
+                  profileApi: profile?.api,
+                  errorChain: getErrorChain(error),
+                });
                 return reject(error);
               }
               if (!data) {
