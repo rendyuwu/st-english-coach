@@ -72,6 +72,40 @@ function renderCoachFeedback(messageId: number) {
   }
 }
 
+function hasPriorUserMessage(messageId: number): boolean {
+  return globalContext.chat.slice(0, messageId).some((message) => message?.is_user);
+}
+
+function shouldAutoGenerateForCharacterMessage(messageId: number, settings: ExtensionSettings): boolean {
+  return incomingTypes.includes(settings.autoMode) && hasPriorUserMessage(messageId);
+}
+
+function toStrictJsonSchema(schema: any): any {
+  if (!schema || typeof schema !== 'object' || Array.isArray(schema)) return schema;
+
+  const strictSchema = structuredClone(schema);
+  if (strictSchema.type === 'object' && strictSchema.properties) {
+    strictSchema.additionalProperties = false;
+    strictSchema.required = Object.keys(strictSchema.properties);
+    Object.keys(strictSchema.properties).forEach((key) => {
+      strictSchema.properties[key] = toStrictJsonSchema(strictSchema.properties[key]);
+    });
+  }
+  if (strictSchema.type === 'array' && strictSchema.items) {
+    strictSchema.items = toStrictJsonSchema(strictSchema.items);
+  }
+  return strictSchema;
+}
+
+function isBadRequestError(error: any): boolean {
+  let current = error;
+  while (current) {
+    if (String(current.message ?? current).includes('Bad Request')) return true;
+    current = current.cause;
+  }
+  return false;
+}
+
 function includeCoachFeedbackMessages<T extends Message | ChatMessage>(
   messages: T[],
   settings: ExtensionSettings,
@@ -244,7 +278,7 @@ async function generateCoachFeedback(id: number) {
       includeNames: !!selected_group,
     });
     let messages = includeCoachFeedbackMessages(promptResult.result, settings);
-    let response: ExtractedData['content'];
+    let response: object | string | undefined;
 
     const makeRequest = (requestMessages: Message[], overideParams?: any): Promise<ExtractedData | undefined> => {
       return new Promise((resolve, reject) => {
@@ -264,7 +298,7 @@ async function generateCoachFeedback(id: number) {
             onStart: (requestId) => {
               pendingRequests.set(id, requestId);
             },
-            onFinish: (requestId, data, error) => {
+            onFinish: (_requestId, data, error) => {
               pendingRequests.delete(id);
               if (error) {
                 return reject(error);
@@ -280,26 +314,39 @@ async function generateCoachFeedback(id: number) {
       });
     };
 
-    if (settings.promptEngineeringMode === PromptEngineeringMode.NATIVE) {
-      messages.push({ content: settings.prompt, role: 'user' });
-      const result = await makeRequest(messages, {
-        json_schema: { name: 'RPEnglishCoachFeedback', strict: true, value: chatJsonValue },
-      });
-      // @ts-ignore
-      response = result?.content;
-    } else {
-      const format = settings.promptEngineeringMode as 'json' | 'xml';
+    const generateWithPromptEngineering = async (format: 'json' | 'xml') => {
       const promptTemplate = format === 'json' ? settings.promptJson : settings.promptXml;
       const exampleResponse = schemaToExample(chatJsonValue, format);
       const finalPrompt = Handlebars.compile(promptTemplate, { noEscape: true, strict: true })({
         schema: JSON.stringify(chatJsonValue, null, 2),
         example_response: exampleResponse,
       });
-      messages.push({ content: finalPrompt, role: 'user' });
-      const rest = await makeRequest(messages);
-      if (!rest?.content) throw new Error('No response content received.');
-      // @ts-ignore
-      response = parseResponse(rest.content, format, { schema: chatJsonValue });
+      const promptMessages = structuredClone(messages);
+      promptMessages.push({ content: finalPrompt, role: 'user' });
+      const result = await makeRequest(promptMessages);
+      if (!result?.content) throw new Error('No response content received.');
+      return parseResponse(result.content, format, { schema: chatJsonValue });
+    };
+
+    if (settings.promptEngineeringMode === PromptEngineeringMode.NATIVE) {
+      messages.push({ content: settings.prompt, role: 'user' });
+      try {
+        const result = await makeRequest(messages, {
+          response_format: {
+            type: 'json_schema',
+            json_schema: { name: 'RPEnglishCoachFeedback', strict: true, schema: toStrictJsonSchema(chatJsonValue) },
+          },
+        });
+        response =
+          typeof result?.content === 'string'
+            ? parseResponse(result.content, 'json', { schema: chatJsonValue })
+            : result?.content;
+      } catch (error: any) {
+        if (!isBadRequestError(error)) throw error;
+        response = await generateWithPromptEngineering('json');
+      }
+    } else {
+      response = await generateWithPromptEngineering(settings.promptEngineeringMode as 'json' | 'xml');
     }
 
     if (!response || Object.keys(response as any).length === 0)
@@ -392,7 +439,8 @@ async function initializeGlobalUI() {
   const settings = settingsManager.getSettings();
   globalContext.eventSource.on(
     EventNames.CHARACTER_MESSAGE_RENDERED,
-    (messageId: number) => incomingTypes.includes(settings.autoMode) && generateCoachFeedback(messageId),
+    (messageId: number) =>
+      shouldAutoGenerateForCharacterMessage(messageId, settings) && generateCoachFeedback(messageId),
   );
   globalContext.eventSource.on(
     EventNames.USER_MESSAGE_RENDERED,
