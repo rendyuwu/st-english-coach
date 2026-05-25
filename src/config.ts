@@ -30,27 +30,27 @@ export interface ExtensionSettings {
 
 export const extensionName = 'st-english-coach';
 
-export const DEFAULT_PROMPT = `You are an RP English Coach. Review only the user's latest roleplay writing, using the character's latest response as context. Give selective, practical feedback for English learning without interrupting the roleplay.
+const DEFAULT_FEEDBACK_RULES = `Feedback rules:
+1. Review only the user's latest roleplay writing. Use the character's latest response only for context and vocabulary.
+2. Return at most 2 writingFeedback items. Pick high-value issues only: errors that block meaning, common learner mistakes, or clearly unnatural phrasing.
+3. Use the smallest exact original span that shows the issue. Prefer a word, phrase, or one short sentence.
+4. Never use the whole user message as original unless it is 12 words or fewer and cannot be corrected as smaller spans.
+5. Do not add a broad style rewrite when grammar or wording items already fix the same text.
+6. Merge related fixes into one item when they are in the same short span. Do not create duplicate feedback for markup, quotes, casing, punctuation, tense, or wording around the same words.
+7. Explain in simple Indonesian, one short sentence per item.
+8. In roleplay, quoted text is usually dialogue. Text inside *asterisks* is usually action, narration, or emphasis. Do not criticize the markup itself unless it makes the writing unclear.
+9. Vocabulary or phrases must come from the character response, not the user's message. Return at most 3 vocabulary items.
+10. feedbackSummary must be one short Indonesian sentence and must not repeat the same corrections from writingFeedback.`;
 
-Feedback rules:
-1. Pick only the most useful writing issues: grammar, wording, clarity, natural phrasing, creative writing flow, or unnecessary detail.
-2. Do not rewrite long messages. Correct short phrases or sentences only.
-3. Explain in simple Indonesian.
-4. Do not create duplicate feedback for the same underlying issue. Treat roleplay markup, quotes, markdown, casing, and surrounding punctuation as the same issue when the words are otherwise the same.
-5. In roleplay, quoted text is usually dialogue. Text inside *asterisks* is usually action, narration, or emphasis. Do not criticize the markup itself unless it makes the writing unclear.
-6. Vocabulary or phrases must come from the character response and be useful or difficult for an Indonesian English learner.
+export const DEFAULT_PROMPT = `You are an RP English Coach. Give selective, practical feedback for English learning without interrupting the roleplay.
+
+${DEFAULT_FEEDBACK_RULES}
 
 Return complete data for every schema field. If there are no useful items for an array, return an empty array.`;
 
-export const DEFAULT_PROMPT_JSON = `You are an RP English Coach. Review only the user's latest roleplay writing, using the character's latest response as context. Generate one valid JSON object that strictly follows the provided JSON schema.
+export const DEFAULT_PROMPT_JSON = `You are an RP English Coach. Generate one valid JSON object that strictly follows the provided JSON schema.
 
-Feedback rules:
-1. Pick only the most useful writing issues: grammar, wording, clarity, natural phrasing, creative writing flow, or unnecessary detail.
-2. Do not rewrite long messages. Correct short phrases or sentences only.
-3. Explain in simple Indonesian.
-4. Do not create duplicate feedback for the same underlying issue. Treat roleplay markup, quotes, markdown, casing, and surrounding punctuation as the same issue when the words are otherwise the same.
-5. In roleplay, quoted text is usually dialogue. Text inside *asterisks* is usually action, narration, or emphasis. Do not criticize the markup itself unless it makes the writing unclear.
-6. Vocabulary or phrases must come from the character response and be useful or difficult for an Indonesian English learner.
+${DEFAULT_FEEDBACK_RULES}
 
 Output rules:
 1. You MUST wrap the entire JSON object in a markdown code block (\`\`\`json\n...\n\`\`\`).
@@ -69,15 +69,9 @@ Example perfect response:
 \`\`\`
 `;
 
-export const DEFAULT_PROMPT_XML = `You are an RP English Coach. Review only the user's latest roleplay writing, using the character's latest response as context. Generate one valid XML structure that follows the provided schema and example.
+export const DEFAULT_PROMPT_XML = `You are an RP English Coach. Generate one valid XML structure that follows the provided schema and example.
 
-Feedback rules:
-1. Pick only the most useful writing issues: grammar, wording, clarity, natural phrasing, creative writing flow, or unnecessary detail.
-2. Do not rewrite long messages. Correct short phrases or sentences only.
-3. Explain in simple Indonesian.
-4. Do not create duplicate feedback for the same underlying issue. Treat roleplay markup, quotes, markdown, casing, and surrounding punctuation as the same issue when the words are otherwise the same.
-5. In roleplay, quoted text is usually dialogue. Text inside *asterisks* is usually action, narration, or emphasis. Do not criticize the markup itself unless it makes the writing unclear.
-6. Vocabulary or phrases must come from the character response and be useful or difficult for an Indonesian English learner.
+${DEFAULT_FEEDBACK_RULES}
 
 Output rules:
 1. You MUST wrap the entire XML object in a markdown code block (\`\`\`xml\n...\n\`\`\`).
@@ -106,23 +100,23 @@ export const DEFAULT_SCHEMA_VALUE: object = {
   properties: {
     feedbackSummary: {
       type: 'string',
-      description: 'One short Indonesian summary of the most useful feedback for the user.',
+      description: 'One short Indonesian sentence summarizing the main learning point. Do not repeat item details.',
     },
     writingFeedback: {
       type: 'array',
       description:
-        'Selective, non-duplicate feedback for the most useful writing issues in the user message. Ignore roleplay markup differences when deduplicating.',
+        'At most 2 selective, non-duplicate feedback items. Use small spans only. Do not add a whole-message style rewrite when smaller grammar or wording fixes already cover the issue.',
       items: {
         type: 'object',
         properties: {
           original: {
             type: 'string',
             description:
-              'Exact word, phrase, or short sentence from the user message that needs attention. Do not create separate items for the same phrase with and without roleplay markup.',
+              'Smallest exact word, phrase, or short sentence from the user message that needs attention. Avoid whole-message originals unless the message is 12 words or fewer.',
           },
           suggestion: {
             type: 'string',
-            description: 'More natural or correct English version.',
+            description: 'More natural or correct English version of only the original span.',
           },
           category: {
             type: 'string',
@@ -138,7 +132,7 @@ export const DEFAULT_SCHEMA_VALUE: object = {
     },
     vocabulary: {
       type: 'array',
-      description: 'Useful or difficult words and phrases from the character response.',
+      description: 'At most 3 useful or difficult words and phrases from the character response only.',
       items: {
         type: 'object',
         properties: {

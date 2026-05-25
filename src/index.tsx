@@ -6,7 +6,16 @@ import { buildPrompt, Message, Generator } from 'sillytavern-utils-lib';
 import { ChatMessage, EventNames, ExtractedData } from 'sillytavern-utils-lib/types';
 import { characters, name1, selected_group, st_echo } from 'sillytavern-utils-lib/config';
 import { AutoModeOptions } from 'sillytavern-utils-lib/types/translate';
-import { ExtensionSettings, PromptEngineeringMode, EXTENSION_KEY, extensionName } from './config.js';
+import {
+  DEFAULT_PROMPT,
+  DEFAULT_PROMPT_JSON,
+  DEFAULT_PROMPT_XML,
+  DEFAULT_SCHEMA_VALUE,
+  ExtensionSettings,
+  PromptEngineeringMode,
+  EXTENSION_KEY,
+  extensionName,
+} from './config.js';
 import { parseResponse } from './parser.js';
 import { schemaToExample } from './schema-to-example.js';
 import * as Handlebars from 'handlebars';
@@ -22,6 +31,19 @@ const generator = new Generator();
 const pendingRequests = new Map<number, string>();
 const incomingTypes = [AutoModeOptions.RESPONSES, AutoModeOptions.BOTH];
 const outgoingTypes = [AutoModeOptions.INPUT, AutoModeOptions.BOTH];
+
+const LEGACY_DEFAULT_PROMPT_HASH = '9a350e8d';
+const LEGACY_DEFAULT_PROMPT_JSON_HASH = '4a1e9e10';
+const LEGACY_DEFAULT_PROMPT_XML_HASH = '66d49079';
+
+function hashText(value: string) {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < value.length; i += 1) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(16);
+}
 
 // --- Handlebars Helper ---
 if (!Handlebars.helpers['join']) {
@@ -580,6 +602,62 @@ function renderReactSettings() {
   );
 }
 
+function migrateDefaultSettings() {
+  const settings = settingsManager.getSettings();
+  let changed = false;
+
+  if (hashText(settings.prompt) === LEGACY_DEFAULT_PROMPT_HASH) {
+    settings.prompt = DEFAULT_PROMPT;
+    changed = true;
+  }
+  if (hashText(settings.promptJson) === LEGACY_DEFAULT_PROMPT_JSON_HASH) {
+    settings.promptJson = DEFAULT_PROMPT_JSON;
+    changed = true;
+  }
+  if (hashText(settings.promptXml) === LEGACY_DEFAULT_PROMPT_XML_HASH) {
+    settings.promptXml = DEFAULT_PROMPT_XML;
+    changed = true;
+  }
+
+  const schema = settings.schemaPresets.default?.value as any;
+  const defaultSchema = DEFAULT_SCHEMA_VALUE as any;
+  const properties = schema?.properties;
+  const defaultProperties = defaultSchema.properties;
+  if (
+    properties?.feedbackSummary?.description ===
+    'One short Indonesian summary of the most useful feedback for the user.'
+  ) {
+    properties.feedbackSummary.description = defaultProperties.feedbackSummary.description;
+    changed = true;
+  }
+  if (
+    properties?.writingFeedback?.description ===
+    'Selective, non-duplicate feedback for the most useful writing issues in the user message. Ignore roleplay markup differences when deduplicating.'
+  ) {
+    properties.writingFeedback.description = defaultProperties.writingFeedback.description;
+    changed = true;
+  }
+  const feedbackProperties = properties?.writingFeedback?.items?.properties;
+  const defaultFeedbackProperties = defaultProperties.writingFeedback.items.properties;
+  if (
+    feedbackProperties?.original?.description ===
+    'Exact word, phrase, or short sentence from the user message that needs attention. Do not create separate items for the same phrase with and without roleplay markup.'
+  ) {
+    feedbackProperties.original.description = defaultFeedbackProperties.original.description;
+    changed = true;
+  }
+  if (feedbackProperties?.suggestion?.description === 'More natural or correct English version.') {
+    feedbackProperties.suggestion.description = defaultFeedbackProperties.suggestion.description;
+    changed = true;
+  }
+  if (properties?.vocabulary?.description === 'Useful or difficult words and phrases from the character response.') {
+    properties.vocabulary.description = defaultProperties.vocabulary.description;
+    changed = true;
+  }
+
+  if (changed) settingsManager.saveSettings();
+}
+
 function main() {
   renderReactSettings();
   initializeGlobalUI();
@@ -587,7 +665,10 @@ function main() {
 
 settingsManager
   .initializeSettings()
-  .then(main)
+  .then(() => {
+    migrateDefaultSettings();
+    main();
+  })
   .catch((error) => {
     console.error(error);
     st_echo('error', 'RP English Coach settings failed to load. Check console for details.');
